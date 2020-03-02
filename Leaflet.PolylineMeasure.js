@@ -41,7 +41,7 @@
              */
             position: 'topleft',
             /**
-             * Which units the distances are displayed in. Possible values are: 'metres', 'landmiles', 'nauticalmiles'
+             * Which units the distances are displayed in. Possible values are: 'metres', 'landmiles', 'nauticalmiles', 'feet'
              * @type {String}
              * @default
              */
@@ -148,8 +148,9 @@
              */
             unitControlTitle: {
                text: 'Change Units',
+               feet: 'feet',
                metres: 'metres',
-               landmiles: 'land miles',
+               landmiles: 'statute miles',
                nauticalmiles: 'nautical miles'
             },
             /**
@@ -416,9 +417,12 @@
                 }  else if  (this.options.unit == "landmiles") {
                     var label = this.options.unitControlLabel.landmiles;
                     var title = this.options.unitControlTitle.text + " [" + this.options.unitControlTitle.landmiles  + "]";
-                } else {
+                } else  if  (this.options.unit == "nauticalmiles") {
                     var label = this.options.unitControlLabel.nauticalmiles;
                     var title = this.options.unitControlTitle.text + " [" + this.options.unitControlTitle.nauticalmiles  + "]";
+                } else {
+                    var label = this.options.unitControlLabel.feet;
+                    var title = this.options.unitControlTitle.text + " [" + this.options.unitControlTitle.feet  + "]";
                 }
                 var classes = [];
                 this._unitControl = this._createControl (label, title, classes, this._container, this._changeUnit, this);
@@ -518,29 +522,33 @@
         },
 
         _changeUnit: function() {
-            if (this.options.unit == "metres") {
-                this.options.unit = "landmiles";
-                document.getElementById("unitControlId").innerHTML = this.options.unitControlLabel.landmiles;
-                this._unitControl.title = this.options.unitControlTitle.text +" [" + this.options.unitControlTitle.landmiles  + "]";
-            } else if (this.options.unit == "landmiles") {
-                this.options.unit = "nauticalmiles";
-                document.getElementById("unitControlId").innerHTML = this.options.unitControlLabel.nauticalmiles;
-                this._unitControl.title = this.options.unitControlTitle.text +" [" + this.options.unitControlTitle.nauticalmiles  + "]";
-            } else {
-                this.options.unit = "metres";
-                document.getElementById("unitControlId").innerHTML = this.options.unitControlLabel.metres;
-                this._unitControl.title = this.options.unitControlTitle.text +" [" + this.options.unitControlTitle.metres  + "]";
-            }
-            this._arrPolylines.map (function(line) {
-                var totalDistance = 0;
-                line.circleCoords.map (function(point, point_index) {
-                    if (point_index >= 1) {
-                        var distance = line.circleCoords [point_index - 1].distanceTo (line.circleCoords [point_index]);
-                        totalDistance += distance;
-                        this._updateTooltip (line.tooltips [point_index], line.tooltips [point_index - 1], totalDistance, distance, line.circleCoords [point_index - 1], line.circleCoords [point_index]);
-                    }
-                }.bind(this));
+          if (this.options.unit == "feet") {
+            this.options.unit = "nauticalmiles";
+            document.getElementById("unitControlId").innerHTML = this.options.unitControlLabel.nauticalmiles;
+            this._unitControl.title = this.options.unitControlTitle.text +" [" + this.options.unitControlTitle.nauticalmiles  + "]";
+          } else if (this.options.unit == "nauticalmiles") {
+            this.options.unit = "landmiles";
+            document.getElementById("unitControlId").innerHTML = this.options.unitControlLabel.landmiles;
+            this._unitControl.title = this.options.unitControlTitle.text +" [" + this.options.unitControlTitle.landmiles  + "]";
+          } else if (this.options.unit == "landmiles") {
+            this.options.unit = "metres";
+            document.getElementById("unitControlId").innerHTML = this.options.unitControlLabel.metres;
+            this._unitControl.title = this.options.unitControlTitle.text +" [" + this.options.unitControlTitle.metres  + "]";
+          } else {
+            this.options.unit = "feet";
+            document.getElementById("unitControlId").innerHTML = this.options.unitControlLabel.feet;
+            this._unitControl.title = this.options.unitControlTitle.text +" [" + this.options.unitControlTitle.feet  + "]";
+          }
+          this._arrPolylines.map (function(line) {
+            var totalDistance = 0;
+            line.circleCoords.map (function(point, point_index) {
+              if (point_index >= 1) {
+                var distance = line.circleCoords [point_index - 1].distanceTo (line.circleCoords [point_index]);
+                totalDistance += distance;
+                this._updateTooltip (line.tooltips [point_index], line.tooltips [point_index - 1], totalDistance, distance, line.circleCoords [point_index - 1], line.circleCoords [point_index]);
+              }
             }.bind(this));
+          }.bind(this));
         },
 
         /**
@@ -630,6 +638,17 @@
                         dist = (dist/0.3048).toFixed(0);
                         unit = this.options.unitControlLabel.feet;
                     }
+                }
+            } else if (this.options.unit === 'feet') {
+                unit = this.options.unitControlLabel.feet;
+                if (dist >= 304.8) {
+                    dist = (dist/0.3048).toFixed(1);
+                } else if (dist >= 30.48) {
+                    dist = (dist/0.3048).toFixed(2);
+                } else if (dist >= 3.048) {
+                    dist = (dist/0.3048).toFixed(3);
+                } else {
+                    dist = (dist/0.3048).toFixed(4);
                 }
             }
             else {
